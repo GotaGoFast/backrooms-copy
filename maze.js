@@ -349,8 +349,10 @@ function rayCast() {
         }
         
         canvas.lineWidth = rayWidth
-        canvas.moveTo(startX + (spread-i-0.5) * rayWidth, startY + size/ 2 - (wallHeight / 2));
-        canvas.lineTo(startX + (spread-i-0.5) * rayWidth, startY + size/ 2 - (wallHeight / 2) + wallHeight);
+        canvas.moveTo(startX + (spread-i-0.5) * rayWidth, startY + size/ 2 - (wallHeight / 2) + dist * yOffTop * 0.4);
+        canvas.lineTo(startX + (spread-i-0.5) * rayWidth, startY + size/ 2 - (wallHeight / 2) + wallHeight + dist * yOffBottom * 0.4);
+        // canvas.moveTo(startX + (spread-i-0.5) * rayWidth, startY + (size/2) * (dist * yOffTop - 1)/(dist * yOffTop))
+        // canvas.lineTo(startX + (spread-i-0.5) * rayWidth, startY + (size/2) * (dist * yOffBottom - 1)/(dist * yOffBottom))
         canvas.stroke()
         canvas.lineWidth = 1
         
@@ -385,28 +387,33 @@ function checkKeys() {
         angle = getTrueAngle(angle)
     }
 
-    if ((keysPressed["w"] == true) && (keysPressed["s"] == false)) {
-        if ((keysPressed["a"] == true) && (keysPressed["d"] == false)) {
-            tilePosX += 0.4 * Math.cos(rad(getTrueAngle(angle - 45)))
-            tilePosY += 0.4 * Math.sin(rad(getTrueAngle(angle - 45)))
-        } else if ((keysPressed["d"] == true) && (keysPressed["a"] == false)) {
-            tilePosX += 0.4 * Math.cos(rad(getTrueAngle(angle + 45)))
-            tilePosY += 0.4 * Math.sin(rad(getTrueAngle(angle + 45)))
+    let moveDir = 0
+
+    if ((keys["a"]) && !(keys["d"])) {
+        if ((keys["s"]) && !(keys["w"])) {
+            moveDir = 135
+        } else if ((keys["w"]) && !(keys["s"])) {
+            moveDir = 45
         } else {
-            tilePosX += 0.4 * Math.cos(rad(angle))
-            tilePosY += 0.4 * Math.sin(rad(angle))
+            moveDir = 90
         }
-    } else if ((keysPressed["s"] == true) && (keysPressed["w"] == false)) {
-        if ((keysPressed["a"] == true) && (keysPressed["d"] == false)) {
-            tilePosX -= 0.4 * Math.cos(rad(getTrueAngle(angle + 45)))
-            tilePosY -= 0.4 * Math.sin(rad(getTrueAngle(angle + 45)))
-        } else if ((keysPressed["d"] == true) && (keysPressed["a"] == false)) {
-            tilePosX -= 0.4 * Math.cos(rad(getTrueAngle(angle - 45)))
-            tilePosY -= 0.4 * Math.sin(rad(getTrueAngle(angle - 45)))
+    } else if ((keys["d"]) && !(keys["a"])) {
+        if ((keys["s"]) && !(keys["w"])) {
+            moveDir = 225
+        } else if ((keys["w"]) && !(keys["s"])) {
+            moveDir = 315
         } else {
-            tilePosX -= 0.4 * Math.cos(rad(angle))
-            tilePosY -= 0.4 * Math.sin(rad(angle))
+            moveDir = 270
         }
+    } else if ((keys["w"]) && !(keys["s"])) {
+        moveDir = 0
+    } else if ((keys["s"]) && !(keys["w"])) {
+        moveDir = 180
+    }
+
+    if ((keys["w"]) || (keys["a"]) || (keys["s"]) || (keys["d"])) {
+        tilePosX += 0.4 * Math.cos(rad(getTrueAngle(angle + moveDir)))
+        tilePosY += 0.4 * Math.sin(rad(getTrueAngle(angle + moveDir)))
     }
 
     if (tilePosX < 0) {
@@ -472,15 +479,21 @@ function mainloop() {
 }
 
 window.addEventListener('keydown', function (e) {
-    keysPressed[String(e.key)] = true
+    keys[String(e.key)] = true
 }, false);
 
 window.addEventListener('keyup', function (e) {
-    keysPressed[String(e.key)] = false
+    keys[String(e.key)] = false
 }, false);
 
 function updatePosition(e) {
     angle -= e.movementX * 0.2
+
+    if ((yOffAngle - e.movementY > -45) && (yOffAngle - e.movementY < 45)) {
+        yOffAngle -= e.movementY
+        yOffTop = Math.tan(rad(45 + yOffAngle))
+        yOffBottom = Math.tan(rad(-45 + yOffAngle))
+    }
 }
 
 function lockChangeAlert() {
@@ -531,11 +544,14 @@ var mazePosX = viewRadius
 var mazePosY = viewRadius
 var rays = []
 var angle = 0
-var keysPressed = {}
+var keys = {}
 var exploredTiles = initialiseMaze()
 var paused = true
 var interval = 0
 var canClick = true
+var yOffAngle = 0
+var yOffTop = 0
+var yOffBottom = 0
 
 canvas.canvas.width = width;
 canvas.canvas.height = height;
