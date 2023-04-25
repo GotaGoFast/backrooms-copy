@@ -349,8 +349,8 @@ function rayCast() {
         }
         
         canvas.lineWidth = rayWidth
-        canvas.moveTo(startX + (spread-i-0.5) * rayWidth, startY + size/ 2 - (wallHeight / 2) + dist * yOffTop * 0.4);
-        canvas.lineTo(startX + (spread-i-0.5) * rayWidth, startY + size/ 2 - (wallHeight / 2) + wallHeight + dist * yOffBottom * 0.4);
+        canvas.moveTo(startX + (spread-i-0.5) * rayWidth, startY + size/ 2 - (wallHeight / 2));
+        canvas.lineTo(startX + (spread-i-0.5) * rayWidth, startY + size/ 2 - (wallHeight / 2) + wallHeight);
         // canvas.moveTo(startX + (spread-i-0.5) * rayWidth, startY + (size/2) * (dist * yOffTop - 1)/(dist * yOffTop))
         // canvas.lineTo(startX + (spread-i-0.5) * rayWidth, startY + (size/2) * (dist * yOffBottom - 1)/(dist * yOffBottom))
         canvas.stroke()
