@@ -59,6 +59,7 @@ function nextInt(value, direction) { //returns what the next int is
     }
 }
 
+
 function generateTile() { //generates a tile of size [tileSize]
 
     let tile = []
@@ -335,9 +336,9 @@ function rayCast() {
         perpDist = dist * Math.cos(rad(Math.abs(angle - rayAngle)))
 
         wallHeight = size / perpDist //the derivation of height based on distance. assumed viewing angle
-        // if (wallHeight > size) {
-        //     wallHeight = size
-        // }
+        if (wallHeight > size) {
+            wallHeight = size
+        }
 
         canvas.fillStyle = "#FFFFFF"
         if (wallType == 1) {
@@ -349,11 +350,15 @@ function rayCast() {
         }
         
         canvas.lineWidth = rayWidth
+
+        if (threeDee) {
         canvas.moveTo(startX + (spread-i-0.5) * rayWidth, startY + size/ 2 - (wallHeight / 2));
         canvas.lineTo(startX + (spread-i-0.5) * rayWidth, startY + size/ 2 - (wallHeight / 2) + wallHeight);
         // canvas.moveTo(startX + (spread-i-0.5) * rayWidth, startY + (size/2) * (dist * yOffTop - 1)/(dist * yOffTop))
         // canvas.lineTo(startX + (spread-i-0.5) * rayWidth, startY + (size/2) * (dist * yOffBottom - 1)/(dist * yOffBottom))
         canvas.stroke()
+
+        }
         canvas.lineWidth = 1
         
         //rays.push([i*rayWidth, wallHeight, perpDist, wallType])
@@ -412,23 +417,85 @@ function checkKeys() {
     }
 
     if ((keys["w"]) || (keys["a"]) || (keys["s"]) || (keys["d"])) {
-        tilePosX += 0.4 * Math.cos(rad(getTrueAngle(angle + moveDir)))
-        tilePosY += 0.4 * Math.sin(rad(getTrueAngle(angle + moveDir)))
+
+
+        let verts = [[0.4, 0.4], [0.4, -0.4], [-0.4, -0.4], [-0.4, 0.4]]
+        let mazeModX = 0
+        let mazeModY = 0
+        let tempTilePosX = 0
+        let tempTilePosY = 0
+        let collided = 0
+
+        for (let j = 0; j < 3; j++) {
+
+            if (j != 1) {
+                tilePosX += 0.4 * Math.cos(rad(getTrueAngle(angle + moveDir)))
+            }
+
+            if (j != 2) {
+                tilePosY += 0.4 * Math.sin(rad(getTrueAngle(angle + moveDir)))
+            }
+
+            collided = 0
+
+            for (let i = 0; i < 4; i++) {
+
+                mazeModX = 0
+                mazeModY = 0
+                tempTilePosX = 0
+                tempTilePosY = 0
+
+                tempTilePosX = tilePosX + verts[i][0]
+                tempTilePosY = tilePosY + verts[i][1]
+
+                if (tempTilePosX < 0) {
+                    mazeModX --
+                    tempTilePosX += tileSize
+                } else if (tempTilePosX >= tileSize) {
+                    mazeModX ++
+                    tempTilePosX -= tileSize
+                }
+                if (tempTilePosY < 0) {
+                    mazeModY --
+                    tempTilePosY += tileSize
+                } else if (tempTilePosY >= tileSize) {
+                    mazeModY ++
+                    tempTilePosY -= tileSize
+                }
+
+                if (wallTiles.includes(exploredTiles[mazePosY + mazeModY][mazePosX + mazeModX][Math.floor(tempTilePosY)][Math.floor(tempTilePosX)])) {
+                    collided = 1
+                    break
+                }
+            }
+
+            if (collided == 1) {
+                if (j != 1) {
+                    tilePosX -= 0.4 * Math.cos(rad(getTrueAngle(angle + moveDir)))
+                }
+    
+                if (j != 2) {
+                    tilePosY -= 0.4 * Math.sin(rad(getTrueAngle(angle + moveDir)))
+                }
+            } else {
+                break
+            }
+        }
     }
 
     if (tilePosX < 0) {
         mazePosX --
-        tilePosX = tileSize + tilePosX
+        tilePosX += tileSize
     } else if (tilePosX >= tileSize) {
         mazePosX ++
-        tilePosX = tilePosX - tileSize
+        tilePosX -= tileSize
     }
     if (tilePosY < 0) {
         mazePosY --
-        tilePosY = tileSize + tilePosY
+        tilePosY += tileSize
     } else if (tilePosY >= tileSize) {
         mazePosY ++
-        tilePosY = tilePosY - tileSize
+        tilePosY -= tileSize
     }
 
     createMaze()
@@ -525,11 +592,13 @@ document.addEventListener("pointerlockchange", lockChangeAlert, false);
 
 //store
 const tileSize = 100
-const renderDist = 200
+const renderDist = 100
 const spread = 500
 const viewAngle = 60
 const opaqueTiles = [1, 2]
+const wallTiles = [1, 2]
 const debug = 0
+const threeDee = 1
 const viewRadius = Math.ceil(renderDist / tileSize)
 
 var width = window.innerWidth - 30;
