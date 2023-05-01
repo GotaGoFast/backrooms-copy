@@ -1,6 +1,63 @@
 var c = document.getElementById("canvas"); //getting the canvas
 var canvas = c.getContext("2d"); //getting canvas context
 
+class Entity {
+    constructor(mazePosX, mazePosY, tilePosX, tilePosY, type) {
+        this.eMazePosX = mazePosX
+        this.eMazePosY = mazePosY
+        this.eTilePosX = tilePosX
+        this.eTilePosY = tilePosY
+        this.type = type
+        this.mood = 0
+        this.eAngle = 0
+        this.playerDist = 0
+    }
+
+    updateEntity() {
+        if (self.type == "idle") {
+            this.angle++
+        }
+    }
+    
+}
+
+function sortFunction(a, b) {
+    if (a[2] === b[2]) {
+        return 0;
+    }
+    else {
+        return (a[2] < b[2]) ? -1 : 1;
+    }
+}
+
+function angleFrom(a, b) {
+    a = getTrueAngle(a)
+    b = getTrueAngle(b)
+
+    if (b > a) {
+        if (b - a > 180) {
+            return - (360 - (b - a))
+        } else {
+            return b - a
+        }
+    } else {
+        if (b - a < -180) {
+            return 360 + (b - a)
+        } else {
+            return (b - a)
+        }
+    }
+    // if ((-180 < (b - a)) && ((b - a) < 180)) {
+    //     return b - a
+    // } else {
+    //     if (b > a) {
+    //         return 360 - (b - a)
+    //     } else {
+    //         return 360 + (b - a)
+    //     }
+    // }
+}
+
 function rand(min, max) { //generates a random number between min and max (inclusive?)
     return Math.floor(Math.random() * (max - min + 1)) + min; //configuring the random func to be between params
 }
@@ -25,6 +82,10 @@ function menu() {
 
 function rad(val) {
     return val * (Math.PI / 180)
+}
+
+function degrees(val) {
+    return val / (Math.PI / 180)
 }
 
 function getTrueAngle(angle) {
@@ -124,6 +185,8 @@ function initialiseMaze() { //creates initial maze and tiles
         }
         maze.push(row) //adds rows to maze
     }
+    maze[mazePosY][mazePosX][Math.floor(tilePosY)][Math.floor(tilePosX)] = 0 //making sure player doesn't spawn in a block
+    entities.push(new Entity(mazePosX, mazePosY, tileSize - 3.5, tileSize - 3.5, angus))
     return maze //4d list
 }
 
@@ -133,7 +196,10 @@ function createMaze() { //generates new maze to suit tiles
             for (let i = 0; i < exploredTiles.length; i++) {
                 exploredTiles[i].unshift(generateTile()) //add an extra tile to front of row
             }
-        mazePosX += 1
+        mazePosX ++
+        for (let i = 0; i < entities.length; i++) {
+            entities[i].eMazePosX ++
+        }
     } else if (mazePosX + viewRadius > exploredTiles[0].length - 1) { //view radius goes outside to the right
         for (let i = 0; i < exploredTiles.length; i++) {
             exploredTiles[i].push(generateTile()) //add an extra tile to front of row
@@ -146,7 +212,10 @@ function createMaze() { //generates new maze to suit tiles
             row.push(generateTile())
         }
         exploredTiles.unshift(row) //add empty row to front of list
-        mazePosY += 1
+        mazePosY ++
+        for (let i = 0; i < entities.length; i++) {
+            entities[i].eMazePosY ++
+        }
     } else if (mazePosY + viewRadius > exploredTiles.length - 1) { //if view radius goes oustide upward
         let row = []
         for (let i = 0; i < exploredTiles[0].length; i++) {
@@ -164,8 +233,7 @@ function rayCast() {
     // canvas.strokeText("pos: " + tilePosX.toFixed(2) + ", "+ tilePosY.toFixed(2), 20, 90)
     // canvas.strokeText("mazePos: " + mazePosX + " " + mazePosY + " of " + exploredTiles[0].length + " " + exploredTiles.length, 20, 130)
 
-    rays = [] //stores ray info
-
+    let rays = [] //stores ray info
     let rayAngle = 0 //angle of current ray
     let hit = false //whether or not a ray has hit an opaque wall
     let rendDist = 0 //how many tile edges the ray has hit (limits ray dist)
@@ -182,8 +250,10 @@ function rayCast() {
     let mazeModY = 0 //ray mod for when it goes outside of tile y
     let currentSquareX = 0 //what square on grid is being checked
     let currentSquareY = 0 //what square on grid is being checked
+    let entitiesHit = [] //entities seen
 
     if (debug == 1) {
+        canvas.beginPath()
         for (let y = 0; y < tileSize; y++) {
             for (let x = 0; x < tileSize; x++) {
                 if (opaqueTiles.includes(exploredTiles[mazePosY][mazePosX][y][x])) {
@@ -198,15 +268,21 @@ function rayCast() {
         canvas.fillStyle = "#234742";
 
         canvas.fillRect(startX + tilePosX * size/tileSize - 5, startY + size - (tilePosY) * size/tileSize - 5, 10, 10)
+        for (i = 0; i < entities.length; i++) {
+            if ((entities[i].eMazePosX == mazePosX) && (entities[i].eMazePosY == mazePosY)) {
+                canvas.strokeRect(startX + entities[i].eTilePosX * size/tileSize - 5, startY + size - (entities[i].eTilePosY) * size/tileSize - 5, 10, 10)
+            }
+        }
+
+        // canvas.arc(startX + size / 2, startY + size / 2, size / 6, 0, 2 * Math.PI)
+        canvas.arc(startX + tilePosX * size/tileSize, startY + size - (tilePosY) * size/tileSize, size / 10, rad(-angle - 30), rad(-angle + 30))
+
+        canvas.stroke()
+
+        canvas.closePath()
     }
 
     for (let i = 0; i < spread; i++) {
-        canvas.beginPath()
-
-        if (debug == 1) {
-            canvas.strokeStyle = "#FFFFFF"
-            canvas.moveTo(startX + tilePosX * size/tileSize, startY + size - (tilePosY) * size/tileSize) //coords of player
-        }
         
         posX = tilePosX
         posY = tilePosY
@@ -232,10 +308,6 @@ function rayCast() {
         } else {
             directionX = 1
         }
-
-        // if (i == 1) {
-        //     console.log("angle: ", angle, "pos: ", posX, " ", posY)
-        // }
         
         while ((hit == false) && (rendDist < renderDist + 1)) {
 
@@ -287,30 +359,6 @@ function rayCast() {
                 currentSquareY = Math.floor(posY + modY)
             }
 
-            // if (posY + modY < 0) {
-            //     currentSquareY = Math.floor(tileSize - 1)
-            // } else {
-            //     currentSquareY = Math.floor(posY + modY)
-            // }
-
-            // if (posX + modX < 0) {
-            //     currentSquareX = Math.floor(tileSize - 1)
-            // } else {
-            //     currentSquareX = Math.floor(posX + modX)
-            // }
-
-            // if (debug == 1) {
-            //     if ((mazeModX == 0) && (mazeModY == 0)) {
-            //         canvas.lineTo(startX + posX * size/tileSize, startY + size - posY * size/tileSize)
-            //         canvas.stroke()
-            //     }
-            // }
-
-            // if (i == 1) {
-            //     console.log("newpos: ", posX, " ", posY, "mazemod: ", mazeModX, " ", mazeModY)
-            //     console.log(exploredTiles[mazePosY + mazeModY][mazePosX + mazeModX][currentSquareY][currentSquareX])
-            // }
-
             if (hit == false) {
                 try {
                     if (opaqueTiles.includes(exploredTiles[mazePosY + mazeModY][mazePosX + mazeModX][currentSquareY][currentSquareX])) {
@@ -328,10 +376,6 @@ function rayCast() {
         }
 
         dist = Math.sqrt(Math.pow(- tilePosY + posY + tileSize * mazeModY, 2) + Math.pow( - tilePosX + posX + tileSize * mazeModX, 2)) / 4
-
-        // if (i == 1) {
-        //     console.log()
-        //     console.log("x dist: ", tileSize * mazeModX - tilePosX + posX, "y dist: ", tileSize * mazeModY - tilePosY + posY, "total: ", Math.sqrt(Math.pow(tilePosY - posY + tileSize * mazeModY, 2) + Math.pow(tilePosX - posX  + tileSize * mazeModX, 2)))}
         
         perpDist = dist * Math.cos(rad(Math.abs(angle - rayAngle)))
 
@@ -340,50 +384,110 @@ function rayCast() {
             wallHeight = size
         }
 
-        canvas.fillStyle = "#FFFFFF"
-        if (wallType == 1) {
-            canvas.strokeStyle = "#FFFF00"
-        } else if (wallType == 0) {
-            canvas.strokeStyle = "#FF00FF"
-        } else {
-            canvas.strokeStyle = "#000000"
-        }
         
+        rays.push([i, wallHeight, perpDist, wallType, dist * 4])
+
+    }
+
+    rays.sort(sortFunction)
+
+    let entityDist = 0
+    let entityAngle = 0
+    let entTotalX = 0
+    let entTotalY = 0
+    let plaTotalX = 0
+    let plaTotalY = 0
+    let angleDiff = 0
+
+
+    for (k = 0; k < entities.length; k++) {
+        entTotalX = tileSize * entities[k].eMazePosX + entities[k].eTilePosX
+        entTotalY = tileSize * entities[k].eMazePosY + entities[k].eTilePosY
+        plaTotalX = tileSize * mazePosX + tilePosX
+        plaTotalY = tileSize * mazePosY + tilePosY
+
+        entityDist = Math.pow(Math.pow(entTotalX - plaTotalX, 2) + Math.pow(entTotalY - plaTotalY, 2), 0.5)
+
+        if (entTotalX > plaTotalX) {
+            if (entTotalY > plaTotalY) {
+                entityAngle = degrees(Math.atan((entTotalY - plaTotalY) / (entTotalX - plaTotalX)))
+            } else {
+                entityAngle = 360 - degrees(Math.atan(-(entTotalY - plaTotalY) / (entTotalX - plaTotalX)))
+            }
+        } else {
+            if (entTotalY < plaTotalY) {
+                entityAngle = 180 + degrees(Math.atan((entTotalY - plaTotalY) / (entTotalX - plaTotalX)))
+            } else {
+                entityAngle = 180 - degrees(Math.atan(-(entTotalY - plaTotalY) / (entTotalX - plaTotalX)))
+            }
+        }
+
+        if ((entityDist < renderDist) && (-(viewAngle/2) < angleFrom(angle, entityAngle)) && (angleFrom(angle, entityAngle) < viewAngle/2)) {
+            entitiesHit.push([entityAngle, entities[k].type, entityDist])
+            console.log(entityAngle)
+            console.log(angleFrom(angle, entityAngle))
+        }
+    }
+
+    entitiesHit.sort(sortFunction)
+
+    rays.reverse()
+    entitiesHit.reverse()
+
+    let bruh = []
+
+    for (d = 0; d < rays.length; d++) {
+        bruh.push(rays[d][4])
+    }
+    // console.log(bruh)
+    // console.log(entitiesHit)
+
+    // if (threeDee) {
+        canvas.fillStyle = "#FFFFFF"
         canvas.lineWidth = rayWidth
+        // canvas.lineWidth = 5
+        let l = 0
 
-        if (threeDee) {
-        canvas.moveTo(startX + (spread-i-0.5) * rayWidth, startY + size/ 2 - (wallHeight / 2));
-        canvas.lineTo(startX + (spread-i-0.5) * rayWidth, startY + size/ 2 - (wallHeight / 2) + wallHeight);
-        // canvas.moveTo(startX + (spread-i-0.5) * rayWidth, startY + (size/2) * (dist * yOffTop - 1)/(dist * yOffTop))
-        // canvas.lineTo(startX + (spread-i-0.5) * rayWidth, startY + (size/2) * (dist * yOffBottom - 1)/(dist * yOffBottom))
-        canvas.stroke()
+        for (let k = 0; k < entitiesHit.length + 1; k++) {
+            while ((l < rays.length) && ((k == entitiesHit.length) || (rays[l][4] > entitiesHit[k][2]))) {
 
+                if (rays[l][3] == 1) {
+                    canvas.strokeStyle = "#0a1463"
+                } else if (rays[l][3] == 0) {
+                    canvas.strokeStyle = "#0a6322"
+                } else {
+                    canvas.strokeStyle = "#000000"
+                }
+                
+                if (threeDee) {
+                canvas.beginPath()
+
+                canvas.moveTo(startX + (spread-rays[l][0]-0.5) * rayWidth, startY + size/ 2 - (rays[l][1] / 2));
+                canvas.lineTo(startX + (spread-rays[l][0]-0.5) * rayWidth, startY + size/ 2 - (rays[l][1] / 2) + rays[l][1]);
+
+                canvas.stroke()
+        
+                canvas.closePath()
+                }
+
+                l++
+            }
+
+            if (k != entitiesHit.length) {
+                canvas.strokeStyle = "#000000"
+
+                canvas.beginPath()
+                // canvas.arc(startX + size - (angleFrom(angle, entityAngle) + viewAngle/2) * (size / viewAngle), startY + size / 2, size / entitiesHit[k][2] / 4, 0, Math.PI * 2)
+                // canvas.stroke()
+                canvas.drawImage(entitiesHit[k][1], startX + size - (angleFrom(angle, entityAngle) + 30) * (size / 60) - size / entitiesHit[k][2] * 2, startY + size / 2 - size / entitiesHit[k][2] * 2, size / entitiesHit[k][2] * 4, size / entitiesHit[k][2] * 4)
+                canvas.closePath()
+
+            }
+
+            
         }
         canvas.lineWidth = 1
-        
-        //rays.push([i*rayWidth, wallHeight, perpDist, wallType])
-
-        canvas.closePath()
-
-
-
-    }
-}
-
-function updateGraphics() {
-    canvas.fillStyle = "#FFFFFF"
-    for (let i = 0; i < spread; i++) {
-        canvas.beginPath()
-        if (rays[i][3] == 1) {
-            canvas.strokeStyle = "#FFFF00"
-        } else {
-            canvas.strokeStyle = "#FF00FF"
-        }
-        canvas.rect(start[0] + rays[i][0], start[1] + height / 2 - (rays[i][1] / 2), rayWidth, rays[i][1])
-        canvas.fillStyle = "#FFFFFF"
-        canvas.stroke()
-        canvas.closePath()
-    }
+    // }
 }
 
 function checkKeys() {
@@ -489,6 +593,7 @@ function checkKeys() {
     } else if (tilePosX >= tileSize) {
         mazePosX ++
         tilePosX -= tileSize
+        
     }
     if (tilePosY < 0) {
         mazePosY --
@@ -504,7 +609,7 @@ function checkKeys() {
 function changeWindow() {
     if ((window.innerHeight != height) || (window.innerWidth != width)) {
         width = window.innerWidth - 30;
-        height = window.innerHeight - 30;
+        height = window.innerHeight - 60;
         startX = 0
         startY = 0
 
@@ -573,33 +678,18 @@ function lockChangeAlert() {
         setTimeout(allowResume, 1500)
     }
 }
-
-c.addEventListener("click", async () => {
-    if (canClick) {
-        clearInterval(interval)
-        canClick = false
-        interval = setInterval(mainloop, 1000/30)
-        paused = false
-        if(!document.pointerLockElement) {
-        await c.requestPointerLock({
-            unadjustedMovement: true,
-        })
-        }
-    }
-})
-
-document.addEventListener("pointerlockchange", lockChangeAlert, false);
-
 //store
 const tileSize = 100
 const renderDist = 100
-const spread = 500
+const spread = 200
 const viewAngle = 60
 const opaqueTiles = [1, 2]
 const wallTiles = [1, 2]
 const debug = 0
 const threeDee = 1
-const viewRadius = Math.ceil(renderDist / tileSize)
+const viewRadius = Math.ceil(renderDist / tileSize) + 1
+const angus = new Image()
+angus.src = "angus.png"
 
 var width = window.innerWidth - 30;
 var height = window.innerHeight - 30;
@@ -611,9 +701,9 @@ var tilePosX = tileSize/2 + 0.5
 var tilePosY = tileSize/2 + 0.5
 var mazePosX = viewRadius
 var mazePosY = viewRadius
-var rays = []
 var angle = 0
 var keys = {}
+var entities = []
 var exploredTiles = initialiseMaze()
 var paused = true
 var interval = 0
@@ -633,3 +723,19 @@ canvas.fillText("Click here to start", width / 2, height / 2)
 canvas.strokeText("Click here to start", width / 2, height / 2)
 canvas.textAlign = "start"
 canvas.closePath()
+
+c.addEventListener("click", async () => {
+    if (canClick) {
+        clearInterval(interval)
+        canClick = false
+        interval = setInterval(mainloop, 1000/30)
+        paused = false
+        if(!document.pointerLockElement) {
+        await c.requestPointerLock({
+            unadjustedMovement: true,
+        })
+        }
+    }
+})
+
+document.addEventListener("pointerlockchange", lockChangeAlert, false);
