@@ -120,7 +120,6 @@ function nextInt(value, direction) { //returns what the next int is
     }
 }
 
-
 function generateTile() { //generates a tile of size [tileSize]
 
     let tile = []
@@ -186,7 +185,7 @@ function initialiseMaze() { //creates initial maze and tiles
         maze.push(row) //adds rows to maze
     }
     maze[mazePosY][mazePosX][Math.floor(tilePosY)][Math.floor(tilePosX)] = 0 //making sure player doesn't spawn in a block
-    entities.push(new Entity(mazePosX, mazePosY, tileSize - 3.5, tileSize - 3.5, angus))
+    entities.push(new Entity(mazePosX, mazePosY, rand(0, tileSize - 1) - 0.5, rand(0, tileSize - 1) - 0.5, entityList[rand(0, entityList.length - 1)]))
     return maze //4d list
 }
 
@@ -251,6 +250,7 @@ function rayCast() {
     let currentSquareX = 0 //what square on grid is being checked
     let currentSquareY = 0 //what square on grid is being checked
     let entitiesHit = [] //entities seen
+    let distInWall = 0
 
     if (debug == 1) {
         canvas.beginPath()
@@ -274,13 +274,19 @@ function rayCast() {
             }
         }
 
-        // canvas.arc(startX + size / 2, startY + size / 2, size / 6, 0, 2 * Math.PI)
         canvas.arc(startX + tilePosX * size/tileSize, startY + size - (tilePosY) * size/tileSize, size / 10, rad(-angle - 30), rad(-angle + 30))
 
         canvas.stroke()
 
         canvas.closePath()
     }
+
+    canvas.beginPath()
+    canvas.fillStyle = "#87990f"
+    canvas.fillRect(startX, startY, size, size/2)
+    canvas.fillStyle = "#99940f"
+    canvas.fillRect(startX, startY + size/2, size, size/2)
+    canvas.closePath()
 
     for (let i = 0; i < spread; i++) {
         
@@ -295,7 +301,7 @@ function rayCast() {
         rayAngle = getTrueAngle(angle - (viewAngle / 2) + i * viewAngle / (spread - 1))
         currentSquareX = 0
         currentSquareY = 0
-        wallType = 2
+        wallType = 0
 
         if (rayAngle > 180) {
             directionY = -1
@@ -313,12 +319,10 @@ function rayCast() {
 
             if (Math.abs(next(posX, directionX) / Math.cos(rad(rayAngle))) < Math.abs(next(posY, directionY) / Math.sin(rad(rayAngle)))) {
                 //this is for if horizontal diagonally closer
-                wallType = 0
                 posY = posY + (next(posX, directionX) * Math.tan(rad(rayAngle)))
                 posX = nextInt(posX, directionX)
             } else {
                 //this is for if vertical diagonally closer
-                wallType = 1
                 posX = posX + next(posY, directionY) / Math.tan(rad(rayAngle))
                 posY = nextInt(posY, directionY)
             }
@@ -372,7 +376,7 @@ function rayCast() {
         }
 
         if (rendDist >= renderDist + 1) {
-            wallType = 2
+            wallType = 4
         }
 
         dist = Math.sqrt(Math.pow(- tilePosY + posY + tileSize * mazeModY, 2) + Math.pow( - tilePosX + posX + tileSize * mazeModX, 2)) / 4
@@ -384,8 +388,15 @@ function rayCast() {
             wallHeight = size
         }
 
+        if (posX == Math.floor(posX)) {
+            distInWall = posY % 1
+        } else {
+            distInWall = posX % 1
+        }
+    
+        wallType = levelTextures[level][opaqueTextures[exploredTiles[mazePosY + mazeModY][mazePosX + mazeModX][currentSquareY][currentSquareX]]]
         
-        rays.push([i, wallHeight, perpDist, wallType, dist * 4])
+        rays.push([i, wallHeight, perpDist, wallType, dist * 4, distInWall])
 
     }
 
@@ -397,7 +408,6 @@ function rayCast() {
     let entTotalY = 0
     let plaTotalX = 0
     let plaTotalY = 0
-    let angleDiff = 0
 
 
     for (k = 0; k < entities.length; k++) {
@@ -462,6 +472,8 @@ function rayCast() {
                 if (threeDee) {
                 canvas.beginPath()
 
+                // canvas.drawImage(wallType, )
+
                 canvas.moveTo(startX + (spread-rays[l][0]-0.5) * rayWidth, startY + size/ 2 - (rays[l][1] / 2));
                 canvas.lineTo(startX + (spread-rays[l][0]-0.5) * rayWidth, startY + size/ 2 - (rays[l][1] / 2) + rays[l][1]);
 
@@ -479,7 +491,7 @@ function rayCast() {
                 canvas.beginPath()
                 // canvas.arc(startX + size - (angleFrom(angle, entityAngle) + viewAngle/2) * (size / viewAngle), startY + size / 2, size / entitiesHit[k][2] / 4, 0, Math.PI * 2)
                 // canvas.stroke()
-                canvas.drawImage(entitiesHit[k][1], startX + size - (angleFrom(angle, entityAngle) + 30) * (size / 60) - size / entitiesHit[k][2] * 2, startY + size / 2 - size / entitiesHit[k][2] * 2, size / entitiesHit[k][2] * 4, size / entitiesHit[k][2] * 4)
+                canvas.drawImage(entitiesHit[k][1], startX + size - (angleFrom(angle, entitiesHit[k][0]) + 30) * (size / 60) - size / entitiesHit[k][2] * 2, startY + size / 2 - size / entitiesHit[k][2] * 2, size / entitiesHit[k][2] * 4, size / entitiesHit[k][2] * 4)
                 canvas.closePath()
 
             }
@@ -679,17 +691,32 @@ function lockChangeAlert() {
     }
 }
 //store
-const tileSize = 30
+const tileSize = 20
 const renderDist = 100
 const spread = 200
 const viewAngle = 60
 const opaqueTiles = [1, 2]
 const wallTiles = [1, 2]
+const opaqueTextures = {1:0, 2:0}
 const debug = 0
 const threeDee = 1
 const viewRadius = Math.ceil(renderDist / tileSize) + 1
+
 const angus = new Image()
 angus.src = "angus.png"
+
+const roblox = new Image()
+roblox.src = "roblox.png"
+
+const obama = new Image()
+obama.src = "obama.png"
+
+const entityList = [angus, roblox, obama]
+
+const L0W1 = new Image()
+L0W1.src = "level_0_wall.png"
+
+const levelTextures = [[L0W1]]
 
 var width = window.innerWidth - 30;
 var height = window.innerHeight - 30;
@@ -711,6 +738,7 @@ var canClick = true
 var yOffAngle = 0
 var yOffTop = 0
 var yOffBottom = 0
+var level = 0
 
 canvas.canvas.width = width;
 canvas.canvas.height = height;

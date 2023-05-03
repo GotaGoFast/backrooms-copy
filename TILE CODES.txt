@@ -2,14 +2,24 @@
 
 TILE CODES
 0 = empty blank air tile
-- TRANSPARENT
-- AIR TYPE
+- transparent
+- air type
 
 1 = normal wall tile
-- OPAQUE
-- WALL TYPE
+- opaque
+- wall type
 
 2 = column tile
-- OPAQUE
-- WALL TYPE
-- SPECIAL TEXTURE
+- opaque
+- wall type
+- special texture
+
+3 = air tile with entity
+- same properties as tile 0
+- contains entity
+
+MOOD CODES
+0 = idle
+1 = roaming
+2 = chasing
+3 = finding
