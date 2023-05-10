@@ -477,6 +477,7 @@ function rayCast() {
     let l = 0
 
     // if (threeDee) {
+        if (floors) {
         for (let m = 0; m < roofs.length; m++) {
             for (let n = 0; n < roofs[m].length-1; n++) {
 
@@ -487,6 +488,7 @@ function rayCast() {
                 canvas.stroke()
                 canvas.closePath()
             }
+        }
         }
     // }
 
@@ -531,9 +533,41 @@ function rayCast() {
 
         
     }
+
+    canvas.fillStyle = "#FFFFFF"
+    canvas.fillRect(startX + 0.1 * size, startY + 0.9 * size, 0.2 * size, 0.05 * size)
+
+    canvas.fillStyle = "#000000"
+    canvas.fillRect(startX + 0.11 * size, startY + 0.91 * size, 0.18 * size * (sprint/5), 0.03 * size)
 }
 
 function checkKeys() {
+    
+    if ((sprintTimer < 2) && (sprint < 5) && !(keys["shift"])) {
+        sprintTimer += 1/realFPS
+    }
+
+    if ((sprint < 5) && (sprintTimer >= 2)) {
+        sprint += 0.5/realFPS
+    }
+
+    let speed = 1
+
+    if (keys["shift"]) {
+        if (((sprint > 0) && (sprintTimer <= 0)) || (sprint > 1)) {
+            sprintTimer = 0
+            speed = 1.5
+            sprint -= 1/realFPS
+
+            if (viewAngle < 70) {
+                viewAngle+= 100 / realFPS
+            }
+        }
+    } else {
+        if (viewAngle > 60) {
+            viewAngle-= 100 / realFPS
+        }
+    }
     
     if ((angle > 360) || (angle < 0)) {
         angle = getTrueAngle(angle)
@@ -576,11 +610,11 @@ function checkKeys() {
         for (let j = 0; j < 3; j++) {
 
             if (j != 1) {
-                tilePosX += 0.4 * Math.cos(rad(getTrueAngle(angle + moveDir)))
+                tilePosX += speed * (12 / realFPS) * Math.cos(rad(getTrueAngle(angle + moveDir)))
             }
 
             if (j != 2) {
-                tilePosY += 0.4 * Math.sin(rad(getTrueAngle(angle + moveDir)))
+                tilePosY += speed * (12 / realFPS) * Math.sin(rad(getTrueAngle(angle + moveDir)))
             }
 
             collided = 0
@@ -618,11 +652,11 @@ function checkKeys() {
 
             if (collided == 1) {
                 if (j != 1) {
-                    tilePosX -= 0.4 * Math.cos(rad(getTrueAngle(angle + moveDir)))
+                    tilePosX -= speed * (12 / realFPS) * Math.cos(rad(getTrueAngle(angle + moveDir)))
                 }
     
                 if (j != 2) {
-                    tilePosY -= 0.4 * Math.sin(rad(getTrueAngle(angle + moveDir)))
+                    tilePosY -= speed * (12 / realFPS) * Math.sin(rad(getTrueAngle(angle + moveDir)))
                 }
             } else {
                 break
@@ -669,36 +703,55 @@ function changeWindow() {
             size = width
         }
 
-
         rayWidth = size / spread
     }
 }
 
 function mainloop() {
 
-    changeWindow()
+    let timerr = Date.now()
 
-    canvas.stroke()
+    changeWindow()
 
     if (!paused) {
 
-    checkKeys()
+        checkKeys()
 
-    rayCast()
+        rayCast()
+
+    } else {
+
+        menu()
 
     }
 
-    menu()
+    timerr = Date.now() - timerr
 
-    //updateGraphics()
+    if (1000/fps - timerr > 0) {
+
+        realFPS = fps
+
+        document.getElementById("fps").innerText = "fps: " + String(fps)
+
+        setTimeout(mainloop, 1000/fps - timerr)
+
+    } else {
+
+        realFPS = 1000 / timerr
+
+        document.getElementById("fps").innerText = "fps: " + String(1000/timerr)
+        
+        setTimeout(mainloop, 0)
+
+    }
 }
 
 window.addEventListener('keydown', function (e) {
-    keys[String(e.key)] = true
+    keys[String(e.key).toLowerCase()] = true
 }, false);
 
 window.addEventListener('keyup', function (e) {
-    keys[String(e.key)] = false
+    keys[String(e.key).toLowerCase()] = false
 }, false);
 
 function updatePosition(e) {
@@ -725,12 +778,12 @@ function lockChangeAlert() {
 const tileSize = 100
 const renderDist = 100
 const spread = 500
-const viewAngle = 60
 const opaqueTiles = [1, 2, 4]
 const wallTiles = [1, 2, 4]
 const opaqueTextures = {1:0, 2:0}
 const debug = 0
 const threeDee = 1
+const floors = 0
 const viewRadius = Math.ceil(renderDist / tileSize) + 1
 
 const angus = new Image()
@@ -771,6 +824,12 @@ var yOffAngle = 0
 var yOffTop = 0
 var yOffBottom = 0
 var level = 0
+var sprint = 5 // seconds
+var sprintTimer = 0
+var fps = 120
+var startFlag = true
+var realFPS = 0
+var viewAngle = 60
 
 canvas.canvas.width = width;
 canvas.canvas.height = height;
@@ -786,10 +845,13 @@ canvas.closePath()
 
 c.addEventListener("click", async () => {
     if (canClick) {
-        clearInterval(interval)
         canClick = false
-        interval = setInterval(mainloop, 1000/30)
+        if (startFlag) {
+            startFlag = false
+            mainloop()
+        }
         paused = false
+        keys = {}
         if(!document.pointerLockElement) {
         await c.requestPointerLock({
             unadjustedMovement: true,
