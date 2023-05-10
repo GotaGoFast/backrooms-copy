@@ -1,5 +1,3 @@
-
-
 TILE CODES
 0 = empty blank air tile
 - transparent
@@ -14,9 +12,15 @@ TILE CODES
 - wall type
 - special texture
 
-3 = air tile with entity
-- same properties as tile 0
-- contains entity
+3 = air tile with special ceiling
+- transparent
+- air type
+- special ceiling colour
+
+4 = black tile
+- opaque
+- wall type
+- no texture
 
 MOOD CODES
 0 = idle
