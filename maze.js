@@ -405,17 +405,16 @@ function rayCast() {
             rendDist++
         }
 
+        wallType = exploredTiles[mazePosY + mazeModY][mazePosX + mazeModX][currentSquareY][currentSquareX]
+
         if (rendDist >= renderDist + 1) {
-            wallType = 4
+            wallType = 1
         }
 
         dist = Math.sqrt(Math.pow(- tilePosY + posY + tileSize * mazeModY, 2) + Math.pow( - tilePosX + posX + tileSize * mazeModX, 2)) / 4
         perpDist = dist * Math.cos(rad(Math.abs(angle - rayAngle)))
 
         wallHeight = size / perpDist //the derivation of height based on distance. assumed viewing angle
-        if (wallHeight > size) {
-            wallHeight = size
-        }
 
         if (posX == Math.floor(posX)) {
             distInWall = posY % 1
@@ -494,25 +493,21 @@ function rayCast() {
 
     for (let k = 0; k < entitiesHit.length + 1; k++) {
         while ((l < rays.length) && ((k == entitiesHit.length) || (rays[l][4] > entitiesHit[k][2]))) {
-
-            if (rays[l][3] == 1) {
-                canvas.strokeStyle = "#0a1463"
-            } else if (rays[l][3] == 0) {
-                canvas.strokeStyle = "#0a6322"
-            } else {
-                canvas.strokeStyle = "#000000"
-            }
             
             if (threeDee) {
                 canvas.beginPath()
 
-                // canvas.drawImage(wallType, )
+                if (Math.floor(rays[l][5] * 125) + rayWidth * 500 / rays[l][1] <= 125) {
+                    canvas.drawImage(levelTextures[level][rays[l][3]], Math.floor(rays[l][5] * 125), 0, rayWidth * 500 / rays[l][1], 500, startX + (spread-rays[l][0]-1) * rayWidth, startY + size/ 2 - (rays[l][1] / 2), rayWidth, rays[l][1])
 
+                } else {
+                    canvas.drawImage(levelTextures[level][rays[l][3]], 125 - rayWidth * 500 / rays[l][1], 0, rayWidth * 500 / rays[l][1], 500, startX + (spread-rays[l][0]-1) * rayWidth, startY + size/ 2 - (rays[l][1] / 2), rayWidth, rays[l][1])
+                }
+                
+                // canvas.moveTo(startX + (spread-rays[l][0]-0.5) * rayWidth, startY + size/ 2 - (rays[l][1] / 2));
+                // canvas.lineTo(startX + (spread-rays[l][0]-0.5) * rayWidth, startY + size/ 2 - (rays[l][1] / 2) + rays[l][1]);
 
-                canvas.moveTo(startX + (spread-rays[l][0]-0.5) * rayWidth, startY + size/ 2 - (rays[l][1] / 2));
-                canvas.lineTo(startX + (spread-rays[l][0]-0.5) * rayWidth, startY + size/ 2 - (rays[l][1] / 2) + rays[l][1]);
-
-                canvas.stroke()
+                // canvas.stroke()
         
                 canvas.closePath()
             }
@@ -777,13 +772,13 @@ function lockChangeAlert() {
 //store
 const tileSize = 100
 const renderDist = 100
-const spread = 500
+const spread = 150
 const opaqueTiles = [1, 2, 4]
 const wallTiles = [1, 2, 4]
 const opaqueTextures = {1:0, 2:0}
 const debug = 0
 const threeDee = 1
-const floors = 0
+const floors = 1
 const viewRadius = Math.ceil(renderDist / tileSize) + 1
 
 const angus = new Image()
@@ -800,8 +795,11 @@ const entityList = [angus, roblox, obama]
 const L0W1 = new Image()
 L0W1.src = "level_0_wall.png"
 
-const levelTextures = [[L0W1]]
-const roofColours = [{0: "#f2ec7c", 3: "#ffffff"}]
+const L0W2 = new Image()
+L0W2.src = "level_0_column.png"
+
+const levelTextures = [{1: L0W1, 2: L0W2}]
+const roofColours = [{0: "#f2ec90", 3: "#ffffff"}]
 
 var width = window.innerWidth - 30;
 var height = window.innerHeight - 30;
@@ -826,7 +824,7 @@ var yOffBottom = 0
 var level = 0
 var sprint = 5 // seconds
 var sprintTimer = 0
-var fps = 120
+var fps = 60
 var startFlag = true
 var realFPS = 0
 var viewAngle = 60
