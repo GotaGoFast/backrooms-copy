@@ -150,11 +150,11 @@ function generateTile() { //generates a tile of size [tileSize]
 
     let columns = rand(0, Math.ceil(tileSize * tileSize * 0.005))
     for (let i = 0; i < columns; i++) {
-        wallX = rand(0, tileSize - 2)
-        wallY = rand(0, tileSize - 2)
+        wallX = rand(1, tileSize - 2)
+        wallY = rand(1, tileSize - 2)
         while ((tile[wallX][wallY] == 1) && (tile[wallX][wallY+1] == 1) && (tile[wallX][wallY-1] == 1) && (tile[wallX+1][wallY] == 1) && (tile[wallX+1][wallY+1] == 1) && (tile[wallX+1][wallY-1] == 1) && (tile[wallX-1][wallY] == 1) && (tile[wallX-1][wallY+1] == 1) && (tile[wallX-1][wallY-1] == 1)) {
-            wallX = rand(0, tileSize - 2)
-            wallY = rand(0, tileSize - 2)
+            wallX = rand(1, tileSize - 2)
+            wallY = rand(1, tileSize - 2)
         }
         tile[wallX][wallY] = 2
     }
@@ -302,13 +302,6 @@ function rayCast() {
         canvas.closePath()
     }
 
-    canvas.beginPath()
-    canvas.fillStyle = "#f2ec7c"
-    canvas.fillRect(startX, startY, size, size/2)
-    canvas.fillStyle = "#99940f"
-    canvas.fillRect(startX, startY + size/2, size, size/2)
-    canvas.closePath()
-
     for (let i = 0; i < spread; i++) {
         
         posX = tilePosX
@@ -396,10 +389,15 @@ function rayCast() {
             }
 
             let tempDist = Math.sqrt(Math.pow(-tilePosY + posY + tileSize * mazeModY, 2) + Math.pow(-tilePosX + posX + tileSize * mazeModX, 2)) / 4 * Math.cos(rad(Math.abs(angle - rayAngle)))
-            if (tempDist > 1) {
+            
+            if ((tempDist > 1) && (roofs[i].length < Math.ceil(renderDist/5))) {
                 roofs[i].push([(size - (size / tempDist)) / 2, exploredTiles[mazePosY + mazeModY][mazePosX + mazeModX][currentSquareY][currentSquareX]])
-            } else {
+            } else if (tempDist < 1) {
                 roofs[i][0] = [0, exploredTiles[mazePosY + mazeModY][mazePosX + mazeModX][currentSquareY][currentSquareX]]
+            } else if (roofs[i].length == Math.ceil(renderDist/5)) {
+                roofs[i].push([(size - (size / tempDist)) / 2, 0])
+            } else if ((hit) || (rendDist == renderDist)) {
+                roofs[i].push([(size - (size / tempDist)) / 2, 0])
             }
 
             rendDist++
@@ -437,6 +435,13 @@ function rayCast() {
     let plaTotalX = 0
     let plaTotalY = 0
 
+    canvas.beginPath()
+    canvas.fillStyle = "#d1ba49"
+    canvas.fillRect(startX, startY, size, size/2)
+    canvas.fillStyle = "#99940f"
+    canvas.fillRect(startX, startY + size/2, size, size/2)
+    canvas.closePath()
+
 
     for (k = 0; k < entities.length; k++) {
         entTotalX = tileSize * entities[k].eMazePosX + entities[k].eTilePosX
@@ -470,26 +475,31 @@ function rayCast() {
     rays.reverse()
     entitiesHit.reverse()
 
-    canvas.fillStyle = "#FFFFFF"
-    canvas.lineWidth = rayWidth + 1
-    // canvas.lineWidth = 5
-    let l = 0
-
-    // if (threeDee) {
-        if (floors) {
+    if (floors) {
+        canvas.lineWidth = rayWidth
         for (let m = 0; m < roofs.length; m++) {
             for (let n = 0; n < roofs[m].length-1; n++) {
-
+                let lining = 0
+                if (roofs[m][n][1] == 0) {
+                    lining = 1
+                }
                 canvas.strokeStyle = roofColours[level][roofs[m][n][1]]
                 canvas.beginPath()
-                canvas.moveTo(startX + (roofs.length - m - 1) * size/roofs.length, startY + roofs[m][n][0])
-                canvas.lineTo(startX + (roofs.length - m - 1) * size/roofs.length, startY + roofs[m][n+1][0])
+                canvas.moveTo(startX + (roofs.length - m - 0.5) * size/roofs.length, startY + roofs[m][n][0])
+                canvas.lineTo(startX + (roofs.length - m - 0.5) * size/roofs.length, startY + roofs[m][n+1][0] - lining)
                 canvas.stroke()
+                canvas.closePath()
+                canvas.strokeStyle = "#FFFFFF"
+                // canvas.beginPath()
+                // canvas.strokeStyle = "#000000"
+                // canvas.lineTo(startX + (roofs.length - m - 1) * size/roofs.length, startY + roofs[m][n+1][0] + 1)
+                // canvas.stroke()
                 canvas.closePath()
             }
         }
-        }
-    // }
+    }
+
+    let l = 0
 
     for (let k = 0; k < entitiesHit.length + 1; k++) {
         while ((l < rays.length) && ((k == entitiesHit.length) || (rays[l][4] > entitiesHit[k][2]))) {
@@ -498,10 +508,10 @@ function rayCast() {
                 canvas.beginPath()
 
                 if (Math.floor(rays[l][5] * 125) + rayWidth * 500 / rays[l][1] <= 125) {
-                    canvas.drawImage(levelTextures[level][rays[l][3]], Math.floor(rays[l][5] * 125), 0, rayWidth * 500 / rays[l][1], 500, startX + (spread-rays[l][0]-1) * rayWidth, startY + size/ 2 - (rays[l][1] / 2), rayWidth, rays[l][1])
+                    canvas.drawImage(levelTextures[level][rays[l][3]], Math.floor(rays[l][5] * 125), 0, rayWidth * 500 / rays[l][1], 500, startX + (spread-rays[l][0]-1) * rayWidth, startY + size/ 2 - (rays[l][1] / 2) + (size * jumpP / rays[l][2]), rayWidth, rays[l][1])
 
                 } else {
-                    canvas.drawImage(levelTextures[level][rays[l][3]], 125 - rayWidth * 500 / rays[l][1], 0, rayWidth * 500 / rays[l][1], 500, startX + (spread-rays[l][0]-1) * rayWidth, startY + size/ 2 - (rays[l][1] / 2), rayWidth, rays[l][1])
+                    canvas.drawImage(levelTextures[level][rays[l][3]], 125 - rayWidth * 500 / rays[l][1], 0, rayWidth * 500 / rays[l][1], 500, startX + (spread-rays[l][0]-1) * rayWidth, startY + size/ 2 - (rays[l][1] / 2) + (size * jumpP / rays[l][2]), rayWidth, rays[l][1])
                 }
                 
                 // canvas.moveTo(startX + (spread-rays[l][0]-0.5) * rayWidth, startY + size/ 2 - (rays[l][1] / 2));
@@ -518,11 +528,14 @@ function rayCast() {
         if (k != entitiesHit.length) {
             canvas.strokeStyle = "#000000"
 
-            canvas.beginPath()
-            // canvas.arc(startX + size - (angleFrom(angle, entityAngle) + viewAngle/2) * (size / viewAngle), startY + size / 2, size / entitiesHit[k][2] / 4, 0, Math.PI * 2)
-            // canvas.stroke()
-            canvas.drawImage(entitiesHit[k][1], startX + size - (angleFrom(angle, entitiesHit[k][0]) + 30) * (size / 60) - size / entitiesHit[k][2] * 2, startY + size / 2 - size / entitiesHit[k][2] * 2, size / entitiesHit[k][2] * 4, size / entitiesHit[k][2] * 4)
-            canvas.closePath()
+            if (entitiesSpawn == 1) {
+                canvas.beginPath()
+                // canvas.arc(startX + size - (angleFrom(angle, entityAngle) + viewAngle/2) * (size / viewAngle), startY + size / 2, size / entitiesHit[k][2] / 4, 0, Math.PI * 2)
+                // canvas.stroke()
+                canvas.drawImage(entitiesHit[k][1], startX + size - (angleFrom(angle, entitiesHit[k][0]) + 30) * (size / 60) - size / entitiesHit[k][2] * 2, startY + size / 2 - size / entitiesHit[k][2] * 2, size / entitiesHit[k][2] * 4, size / entitiesHit[k][2] * 4)
+                canvas.closePath()
+
+            }
 
         }
 
@@ -536,8 +549,8 @@ function rayCast() {
     canvas.fillRect(startX + 0.11 * size, startY + 0.91 * size, 0.18 * size * (sprint/5), 0.03 * size)
 }
 
-function checkKeys() {
-    
+function updatePhysics() {
+
     if ((sprintTimer < 2) && (sprint < 5) && !(keys["shift"])) {
         sprintTimer += 1/realFPS
     }
@@ -546,22 +559,35 @@ function checkKeys() {
         sprint += 0.5/realFPS
     }
 
-    let speed = 1
+    jumpV -= 0.06/realFPS
 
-    if (keys["shift"]) {
-        if (((sprint > 0) && (sprintTimer <= 0)) || (sprint > 1)) {
-            sprintTimer = 0
-            speed = 1.5
-            sprint -= 1/realFPS
+    jumpP += jumpV
 
-            if (viewAngle < 70) {
-                viewAngle+= 100 / realFPS
-            }
+    if (jumpP < 0) {
+        jumpP = 0
+        jumpV = 0
+        jump = 0
+    }
+
+    if (!(sprinting) && (speed > 1) && (jump == 0)) {
+        speed -= 3/realFPS
+    } else if (!(sprinting) && (speed > 1) && (jump == 1)) {
+        speed -= 0.3/realFPS
+    }
+
+}
+
+function checkKeys() {
+
+    if ((jump == 0) && (keys["shift"]) && (((sprint > 0) && (sprintTimer <= 0)) || (sprint > 1))) {
+        sprinting = 1
+        sprintTimer = 0
+        if (speed < 1.5) {
+            speed += 3/realFPS
         }
+        sprint -= 1/realFPS
     } else {
-        if (viewAngle > 60) {
-            viewAngle-= 100 / realFPS
-        }
+        sprinting = 0
     }
     
     if ((angle > 360) || (angle < 0)) {
@@ -710,6 +736,8 @@ function mainloop() {
 
     if (!paused) {
 
+        updatePhysics()
+
         checkKeys()
 
         rayCast()
@@ -722,13 +750,19 @@ function mainloop() {
 
     timerr = Date.now() - timerr
 
+    // realFPS = 1000 / timerr
+
+    // document.getElementById("fps").innerText = "fps: " + String(Math.floor(realFPS))
+
+    // setTimeout(mainloop)
+
     if (1000/fps - timerr > 0) {
 
         realFPS = fps
 
         document.getElementById("fps").innerText = "fps: " + String(fps)
 
-        setTimeout(mainloop, 1000/fps - timerr)
+        setTimeout(mainloop, Math.floor(1000/fps - timerr))
 
     } else {
 
@@ -736,13 +770,22 @@ function mainloop() {
 
         document.getElementById("fps").innerText = "fps: " + String(1000/timerr)
         
-        setTimeout(mainloop, 0)
+        setTimeout(mainloop)
 
     }
 }
 
 window.addEventListener('keydown', function (e) {
-    keys[String(e.key).toLowerCase()] = true
+    if (!(e.repeat)) {
+        if (String(e.key).toLowerCase() == " ") {
+            e.preventDefault()
+            if (jump == 0) {
+                jump = 1
+                jumpV = 0.02
+            }
+        }
+        keys[String(e.key).toLowerCase()] = true
+    }
 }, false);
 
 window.addEventListener('keyup', function (e) {
@@ -778,7 +821,8 @@ const wallTiles = [1, 2, 4]
 const opaqueTextures = {1:0, 2:0}
 const debug = 0
 const threeDee = 1
-const floors = 1
+const floors = 0
+const entitiesSpawn = 0
 const viewRadius = Math.ceil(renderDist / tileSize) + 1
 
 const angus = new Image()
@@ -823,11 +867,17 @@ var yOffTop = 0
 var yOffBottom = 0
 var level = 0
 var sprint = 5 // seconds
+var sprinting = 0
 var sprintTimer = 0
 var fps = 60
 var startFlag = true
 var realFPS = 0
 var viewAngle = 60
+var jump = 0
+var jumpV = 0
+var jumpP = 0
+var jumpPress = 0
+var speed = 1
 
 canvas.canvas.width = width;
 canvas.canvas.height = height;
