@@ -804,21 +804,21 @@ const entitiesSpawn = 0
 const viewRadius = Math.ceil(renderDist / tileSize) + 1
 
 const angus = new Image()
-angus.src = "angus.png"
+angus.src = "images/angus.png"
 
 const roblox = new Image()
-roblox.src = "roblox.png"
+roblox.src = "images/roblox.png"
 
 const obama = new Image()
-obama.src = "obama.png"
+obama.src = "images/obama.png"
 
 const entityList = [angus, roblox, obama]
 
 const L0W1 = new Image()
-L0W1.src = "level_0_wall.png"
+L0W1.src = "images/level_0_wall.png"
 
 const L0W2 = new Image()
-L0W2.src = "level_0_column.png"
+L0W2.src = "images/level_0_column.png"
 
 const levelTextures = [{1: L0W1, 2: L0W2}]
 const roofColours = [{0: "#f2ec90", 3: "#ffffff"}]
