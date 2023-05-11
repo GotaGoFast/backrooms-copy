@@ -18,14 +18,12 @@ class Entity {
             this.angle++
         }
     }
-    
 }
 
 function sortFunction(a, b) {
     if (a[2] === b[2]) {
         return 0;
-    }
-    else {
+    } else {
         return (a[2] < b[2]) ? -1 : 1;
     }
 }
@@ -40,12 +38,10 @@ function angleFrom(a, b) {
         } else {
             return b - a
         }
+    } else if (b - a < -180) {
+        return 360 + (b - a)
     } else {
-        if (b - a < -180) {
-            return 360 + (b - a)
-        } else {
-            return (b - a)
-        }
+        return (b - a)
     }
     // if ((-180 < (b - a)) && ((b - a) < 180)) {
     //     return b - a
@@ -89,34 +85,30 @@ function degrees(val) {
 }
 
 function getTrueAngle(angle) {
-        if (angle > 0) {
-            return angle % 360
-        } else {
-            return 360 - (Math.abs(angle) % 360)
-        }
+    if (angle > 0) {
+        return angle % 360
+    } else {
+        return 360 - (Math.abs(angle) % 360)
+    }
 }
 
 function next(value, direction) { //returns the distance to the next whole number
     if (Number.isInteger(value)) { //if whole number
         return direction //returns next whole number if upward, itself if downward
+    } else if (direction == 1) {
+        return Math.ceil(value) - value //distance upward
     } else {
-        if (direction == 1) {
-            return Math.ceil(value) - value //distance upward
-        } else {
-            return Math.floor(value) - value //distance downward
-        }
+        return Math.floor(value) - value //distance downward
     }
 }
 
 function nextInt(value, direction) { //returns what the next int is
     if (Number.isInteger(value)) { //if already whole number
         return value + direction //returns next whole number if upward, previous whole number if downward
+    } else if (direction == 1) {
+        return Math.ceil(value)
     } else {
-        if (direction == 1) {
-            return Math.ceil(value)
-        } else {
-            return Math.floor(value)
-        }
+        return Math.floor(value)
     }
 }
 
@@ -178,18 +170,6 @@ function generateTile() { //generates a tile of size [tileSize]
 
     }
 
-
-    // let tile = [] //2d list columns (down to up) -> rows (left to right)
-    // let row = []
-
-    // for (let j = 0; j < tileSize; j++) {
-    //     row = []
-    //     for (let i = 0; i < tileSize; i++) {
-    //         row.push(Math.round((rand(0, 51)/100)))
-    //     }
-    //     tile.push(row)
-    // }
-
     return tile //as per [tileSize]
 }
 
@@ -205,11 +185,11 @@ function initialiseMaze() { //creates initial maze and tiles
     }
     maze[mazePosY][mazePosX][Math.floor(tilePosY)][Math.floor(tilePosX)] = 0 //making sure player doesn't spawn in a block
     entities.push(new Entity(mazePosX, mazePosY, rand(0, tileSize - 1) - 0.5, rand(0, tileSize - 1) - 0.5, entityList[rand(0, entityList.length - 1)]))
+    
     return maze //4d list
 }
 
 function createMaze() { //generates new maze to suit tiles
-
     if (mazePosX - viewRadius < 0) { //if view radius goes outside to the left
             for (let i = 0; i < exploredTiles.length; i++) {
                 exploredTiles[i].unshift(generateTile()) //add an extra tile to front of row
@@ -244,13 +224,6 @@ function createMaze() { //generates new maze to suit tiles
 }
 
 function rayCast() {
-
-    canvas.strokeStyle = "#000000"
-    // canvas.font = "30px Arial"
-    // canvas.strokeText("angle: " + angle, 20, 50)
-    // canvas.strokeText("pos: " + tilePosX.toFixed(2) + ", "+ tilePosY.toFixed(2), 20, 90)
-    // canvas.strokeText("mazePos: " + mazePosX + " " + mazePosY + " of " + exploredTiles[0].length + " " + exploredTiles.length, 20, 130)
-
     let rays = [] //stores ray info
     let rayAngle = 0 //angle of current ray
     let hit = false //whether or not a ray has hit an opaque wall
@@ -272,7 +245,6 @@ function rayCast() {
     let distInWall = 0 //distance in wall
     let roofs = []
     let floorDist = 0
-
 
     if (debug == 1) {
         canvas.beginPath()
@@ -304,7 +276,6 @@ function rayCast() {
     }
 
     for (let i = 0; i < spread; i++) {
-        
         posX = tilePosX
         posY = tilePosY
         hit = false
@@ -333,7 +304,6 @@ function rayCast() {
         }
         
         while ((hit == false) && (rendDist < renderDist + 1)) {
-
             if (Math.abs(next(posX, directionX) / Math.cos(rad(rayAngle))) < Math.abs(next(posY, directionY) / Math.sin(rad(rayAngle)))) {
                 //this is for if horizontal diagonally closer
                 posY = posY + (next(posX, directionX) * Math.tan(rad(rayAngle)))
@@ -512,7 +482,6 @@ function rayCast() {
 
     for (let k = 0; k < entitiesHit.length + 1; k++) {
         while ((l < rays.length) && ((k == entitiesHit.length) || (rays[l][4] > entitiesHit[k][2]))) {
-            
             if (threeDee) {
                 canvas.beginPath()
 
@@ -559,7 +528,6 @@ function rayCast() {
 }
 
 function updatePhysics() {
-
     if ((sprintTimer < 2) && (sprint < 5) && !(keys["shift"])) {
         sprintTimer += 1/realFPS
     }
@@ -587,7 +555,6 @@ function updatePhysics() {
 }
 
 function checkKeys() {
-
     if ((jump == 0) && (keys["shift"]) && (((sprint > 0) && (sprintTimer <= 0)) || (sprint > 1))) {
         sprinting = 1
         sprintTimer = 0
