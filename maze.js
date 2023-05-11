@@ -271,6 +271,7 @@ function rayCast() {
     let entitiesHit = [] //entities seen
     let distInWall = 0 //distance in wall
     let roofs = []
+    let floorDist = 0
 
 
     if (debug == 1) {
@@ -317,6 +318,7 @@ function rayCast() {
         currentSquareY = 0
         wallType = 0
         roofs.push([0])
+        floorDist = 0
 
         if (rayAngle > 180) {
             directionY = -1
@@ -388,16 +390,16 @@ function rayCast() {
                 }
             }
 
-            let tempDist = Math.sqrt(Math.pow(-tilePosY + posY + tileSize * mazeModY, 2) + Math.pow(-tilePosX + posX + tileSize * mazeModX, 2)) / 4 * Math.cos(rad(Math.abs(angle - rayAngle)))
+            floorDist = Math.sqrt(Math.pow(-tilePosY + posY + tileSize * mazeModY, 2) + Math.pow(-tilePosX + posX + tileSize * mazeModX, 2)) / 4 * Math.cos(rad(Math.abs(angle - rayAngle)))
             
-            if ((tempDist > 1) && (roofs[i].length < Math.ceil(renderDist/5))) {
-                roofs[i].push([(size - (size / tempDist)) / 2, exploredTiles[mazePosY + mazeModY][mazePosX + mazeModX][currentSquareY][currentSquareX]])
-            } else if (tempDist < 1) {
+            if (((size - (size / floorDist)) / 2 + (size * jumpP / floorDist) > 0) && (roofs[i].length < Math.ceil(renderDist/4))) {
+                roofs[i].push([(size - (size / floorDist)) / 2 + (size * jumpP / floorDist), exploredTiles[mazePosY + mazeModY][mazePosX + mazeModX][currentSquareY][currentSquareX]])
+            } else if ((size - (size / floorDist)) / 2 + (size * jumpP / floorDist) < 0) {
                 roofs[i][0] = [0, exploredTiles[mazePosY + mazeModY][mazePosX + mazeModX][currentSquareY][currentSquareX]]
-            } else if (roofs[i].length == Math.ceil(renderDist/5)) {
-                roofs[i].push([(size - (size / tempDist)) / 2, 0])
+            } else if (roofs[i].length == Math.ceil(renderDist/4)) {
+                roofs[i].push([(size - (size / floorDist)) / 2 + (size * jumpP / floorDist), 0])
             } else if ((hit) || (rendDist == renderDist)) {
-                roofs[i].push([(size - (size / tempDist)) / 2, 0])
+                roofs[i].push([(size - (size / floorDist)) / 2 + (size * jumpP / floorDist), 0])
             }
 
             rendDist++
@@ -435,10 +437,17 @@ function rayCast() {
     let plaTotalX = 0
     let plaTotalY = 0
 
+    let gradient1 = canvas.createLinearGradient(size/2, 0, size/2, size)
+    gradient1.addColorStop(0, "#e6e685")
+    gradient1.addColorStop(1, "#8c8c32")
+
     canvas.beginPath()
-    canvas.fillStyle = "#d1ba49"
+    canvas.fillStyle = gradient1
     canvas.fillRect(startX, startY, size, size/2)
-    canvas.fillStyle = "#99940f"
+    let gradient2 = canvas.createLinearGradient(size/2, 0, size/2, size)
+    gradient2.addColorStop(0, "#61631b")
+    gradient2.addColorStop(1, "#bec242")
+    canvas.fillStyle = gradient2
     canvas.fillRect(startX, startY + size/2, size, size/2)
     canvas.closePath()
 
@@ -480,7 +489,7 @@ function rayCast() {
         for (let m = 0; m < roofs.length; m++) {
             for (let n = 0; n < roofs[m].length-1; n++) {
                 let lining = 0
-                if (roofs[m][n][1] == 0) {
+                if ((n != roofs[m].length-2) && (roofs[m][n][1] == 0)) {
                     lining = 1
                 }
                 canvas.strokeStyle = roofColours[level][roofs[m][n][1]]
@@ -585,6 +594,8 @@ function checkKeys() {
         if (speed < 1.5) {
             speed += 3/realFPS
         }
+        sprint -= 1/realFPS
+    } else if ((jump == 1) && (keys["shift"]) && (((sprint > 0) && (sprintTimer <= 0)) || (sprint > 1))) {
         sprint -= 1/realFPS
     } else {
         sprinting = 0
@@ -760,7 +771,7 @@ function mainloop() {
 
         realFPS = fps
 
-        document.getElementById("fps").innerText = "fps: " + String(fps)
+        document.getElementById("fps").innerText = "This is a backrooms game made from scratch with javascript!! work in progress, this is for my software major project at highschool! fps: " + String(fps)
 
         setTimeout(mainloop, Math.floor(1000/fps - timerr))
 
@@ -768,7 +779,7 @@ function mainloop() {
 
         realFPS = 1000 / timerr
 
-        document.getElementById("fps").innerText = "fps: " + String(1000/timerr)
+        document.getElementById("fps").innerText = "This is a backrooms game made from scratch with javascript!! work in progress, this is for my software major project at highschool! fps: " + String(1000/timerr)
         
         setTimeout(mainloop)
 
@@ -821,7 +832,7 @@ const wallTiles = [1, 2, 4]
 const opaqueTextures = {1:0, 2:0}
 const debug = 0
 const threeDee = 1
-const floors = 0
+const floors = 1
 const entitiesSpawn = 0
 const viewRadius = Math.ceil(renderDist / tileSize) + 1
 
