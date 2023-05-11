@@ -762,6 +762,9 @@ window.addEventListener('keydown', function (e) {
                 jumpV = 0.02
             }
         }
+        if (String(e.key).toLowerCase() == "f") {
+            entities.push(new Entity(mazePosX, mazePosY, tilePosX, tilePosY, entityList[rand(0, entityList.length - 1)]))
+        }
         keys[String(e.key).toLowerCase()] = true
     }
 }, false);
@@ -800,7 +803,7 @@ const opaqueTextures = {1:0, 2:0}
 const debug = 0
 const threeDee = 1
 const floors = 1
-const entitiesSpawn = 0
+const entitiesSpawn = 1
 const viewRadius = Math.ceil(renderDist / tileSize) + 1
 
 const angus = new Image()
