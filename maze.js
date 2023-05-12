@@ -796,7 +796,7 @@ function lockChangeAlert() {
 //store
 const tileSize = 100
 const renderDist = 100
-const spread = 150
+const spread = 250
 const opaqueTiles = [1, 2, 4]
 const wallTiles = [1, 2, 4]
 const opaqueTextures = {1:0, 2:0}
