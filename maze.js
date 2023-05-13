@@ -20,6 +20,20 @@ class Entity {
     }
 }
 
+function hex() {
+    let pp = "pp"
+}
+
+function convertArr(arr, x, y) {
+    let result = []
+
+    for (let i = 0; i < arr.length / 4; i+=4) {
+        result.push(arr.slice(i, i+4))
+    }
+
+    return result
+}
+
 function sortFunction(a, b) {
     if (a[2] === b[2]) {
         return 0;
@@ -184,7 +198,7 @@ function initialiseMaze() { //creates initial maze and tiles
         maze.push(row) //adds rows to maze
     }
     maze[mazePosY][mazePosX][Math.floor(tilePosY)][Math.floor(tilePosX)] = 0 //making sure player doesn't spawn in a block
-    entities.push(new Entity(mazePosX, mazePosY, rand(0, tileSize - 1) - 0.5, rand(0, tileSize - 1) - 0.5, entityList[rand(0, entityList.length - 1)]))
+    // entities.push(new Entity(mazePosX, mazePosY, rand(0, tileSize - 1) - 0.5, rand(0, tileSize - 1) - 0.5, entityList[rand(0, entityList.length - 1)]))
     
     return maze //4d list
 }
@@ -494,7 +508,6 @@ function rayCast() {
                 
                 // canvas.moveTo(startX + (spread-rays[l][0]-0.5) * rayWidth, startY + size/ 2 - (rays[l][1] / 2));
                 // canvas.lineTo(startX + (spread-rays[l][0]-0.5) * rayWidth, startY + size/ 2 - (rays[l][1] / 2) + rays[l][1]);
-
                 // canvas.stroke()
         
                 canvas.closePath()
@@ -825,6 +838,13 @@ L0W2.src = "images/level_0_column.png"
 
 const levelTextures = [{1: L0W1, 2: L0W2}]
 const roofColours = [{0: "#f2ec90", 3: "#ffffff"}]
+
+canvas.drawImage(L0W1, 0, 0)
+const L0W1Arr = (canvas.getImageData(0, 0, 125, 500).data)
+// var idata = canvas.createImageData(125, 500);
+// idata.data.set(L0W1Arr);
+// canvas.putImageData(idata, 0, 0);
+
 
 var width = window.innerWidth - 30;
 var height = window.innerHeight - 30;
