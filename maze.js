@@ -1228,8 +1228,8 @@ const winImg = new Image()
 winImg.src = "images/winScreen.png"
 
 //SOUNDS
-import sound from "sounds/level_0_ambience.mps"
-const L0S1 = new Audio(sound)
+// import sound from "sounds/level_0_ambience.mp3"
+// const L0S1 = new Audio(sound)
 
 //VARS
 var width = window.innerWidth - 30; //width of canvas
